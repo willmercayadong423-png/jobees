@@ -1,16 +1,32 @@
 <?php
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+require __DIR__ . '/../vendor/autoload.php';
 require '../helpers.php';
-require basePath('Database.php');
+require basePath('Framework/Database.php');
+use Framework\Database;
 $config = require basePath('config/db.php');
 
 $db = new Database($config);
-require basePath('Router.php');
 
+require basePath('Framework/Router.php');
+use Framework\Router;
 $router = new Router();
 
-$routes = require basePath('routes.php');
-$uri = $_SERVER['REQUEST_URI'];
+require basePath('routes.php');
+
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+$basePath = '/WS03/public';
+
+if (str_starts_with($uri, $basePath)) {
+    $uri = substr($uri, strlen($basePath));
+}
+
+$uri = $uri ?: '/';
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 $router->route($uri, $method);

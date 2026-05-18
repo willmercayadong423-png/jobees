@@ -1,0 +1,16 @@
+{
+    "name": "willmercayadong/ws03-php",
+    "description": "Job seeker application",
+    "authors": [
+        {
+            "name": "Willer Cayadong",
+            "email": "willmercayadong423@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Framework\\": "Framework/",
+            "App\\": "App/"
+        }
+    }
+}
