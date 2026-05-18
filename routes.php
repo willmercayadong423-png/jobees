@@ -10,3 +10,5 @@ $router->get('/listings', [ListingController::class, 'index']);
 $router->get('/listings/create', [ListingController::class, 'create']);
 
 $router->get('/listings/{id}', [ListingController::class, 'show']);
+
+$router->post('/listings', [ListingController::class, 'store']); 

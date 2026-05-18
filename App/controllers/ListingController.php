@@ -19,7 +19,7 @@ class ListingController
 
     public function index()
     {
-        inspectAndDie(Validation::match('test1', 'test2'));
+   
 
         $listings = $this->db
             ->query('SELECT * FROM listings')
@@ -53,5 +53,44 @@ class ListingController
     loadView('listings/show', [
         'listing' => $listing
     ]);
+}
+
+public function store(){
+    $allowedFields = ['title', 'description', 'salary', 'tags', 'company', 'address', 'city', 'state', 'phone', 'email', 'requirements', 'benefits'];
+    
+    
+    $newListingData = array_intersect_key($_POST, array_flip($allowedFields));
+    
+    $newListingData['user_id'] = 1; // Assuming user ID is 1 for now, replace with actual user ID in production
+    
+    $newListingData = array_map('sanitize', 
+    $newListingData);
+
+
+    $requiredFields = ['title', 'description', 'email', 'city', 'state'];
+
+    $error = [];
+
+    foreach ($requiredFields as $field) {
+        if (empty($newListingData[$field]) ||
+        !Validation::string($newListingData
+        [$field])) {
+            $error[$field] = ucfirst($field) .
+             ' is required';
+        }    
+       
+    }
+
+if(!empty($errors)) {
+    loadView('listings/create', [
+        'errors' => $errors,
+        'listing' => $newListingData
+    ]);
+ }else {
+
+  echo "Success"; 
+}
+
+  
 }
 }
