@@ -29,7 +29,9 @@ require basePath('App/views/partials/top-banner.php');
 
             <li class="mb-2">
                 <strong>Salary:</strong>
-                $<?= number_format($listing->salary); ?>
+               <?= $listing->salary
+    ? '$' . number_format((float)$listing->salary)
+    : 'N/A' ?>
             </li>
 
             <li class="mb-2">
@@ -40,12 +42,12 @@ require basePath('App/views/partials/top-banner.php');
                     Local
                 </span>
             </li>
-
+ <?php if(!empty($listing->tags)) : ?>
             <li class="mb-2">
                 <strong>Tags:</strong>
                 <?= $listing->tags; ?>
             </li>
-
+ <?php endif; ?>
         </ul>
 
         <a href="/listings/<?= $listing->id; ?>"

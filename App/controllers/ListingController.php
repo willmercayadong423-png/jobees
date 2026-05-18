@@ -1,7 +1,7 @@
 <?php
-
 namespace App\Controllers;
 
+use App\Controllers\ErrorController;
 use Framework\Database;
 use Framework\Validation;
 use PDO;
@@ -56,7 +56,7 @@ class ListingController
 }
 
 public function store(){
-    $allowedFields = ['title', 'description', 'salary', 'tags', 'company', 'address', 'city', 'state', 'phone', 'email', 'requirements', 'benefits'];
+   $allowedFields = ['title', 'description', 'salary', 'tags', 'company', 'address', 'city', 'state', 'phone', 'email', 'requirements', 'benefits'];
     
     
     $newListingData = array_intersect_key($_POST, array_flip($allowedFields));
@@ -67,30 +67,98 @@ public function store(){
     $newListingData);
 
 
-    $requiredFields = ['title', 'description', 'email', 'city', 'state'];
+    $requiredFields = ['title', 'description', 'salary', 'email', 'city', 'state'];
 
-    $error = [];
+   $errors = [];
 
-    foreach ($requiredFields as $field) {
-        if (empty($newListingData[$field]) ||
-        !Validation::string($newListingData
-        [$field])) {
-            $error[$field] = ucfirst($field) .
-             ' is required';
-        }    
-       
+foreach ($requiredFields as $field) {
+    if (empty($newListingData[$field])) {
+        $errors[$field] = ucfirst($field) . ' is required';
     }
+}
 
-if(!empty($errors)) {
+if (!empty($errors)) {
     loadView('listings/create', [
         'errors' => $errors,
         'listing' => $newListingData
     ]);
- }else {
+} else {
 
-  echo "Success"; 
+
+ $fields = [];
+ foreach ($newListingData as $field => $value) {
+    $fields[] = $field;
+ }
+//    $this->db->query('INSERT INTO listings 
+//         (title, description, salary, tags,
+//          company, address, city, state, phone,
+//          email, requirements, benefits, user_id) 
+//          VALUES (:title, :description, :salary,
+//          :tags, :company, :address, :city,
+//          :state, :phone, :email, :requirements,
+//          :benefits, :user_id)', $newListingData);
+
+
+
+
+
+ $fields = implode(', ', $fields);
+ 
+ $value = [];
+    foreach ($newListingData as $field => $value) {
+        if ($value === '') {
+        $newListingData[$field] = null;
+        }
+        $values[] = ':' . $field;
+    }
+    $values = implode(', ', $values);
+
+$query = "INSERT INTO listings ($fields) VALUES ($values)";
+
+$this->db->query($query, $newListingData);
+
+
+
+
+redirect('/listings');
+
+
+
+
+
+    // $newListingData['salary'] = !empty($newListingData['salary'])
+    //     ? (float) $newListingData['salary']
+    //     : 0;
+
+ 
+
 }
+}
+public function destroy($params)
+{
+    $id = $params[0] ?? null;
 
+    if (!$id) {
+        ErrorController::notFound('Listing not found');
+        return;
+    }
+
+    $params = ['id' => $id];
+
+    $listing = $this->db
+        ->query('SELECT * FROM listings WHERE id = :id', $params)
+        ->fetch(PDO::FETCH_OBJ);
+
+    if (!$listing) {
+        ErrorController::notFound('Listing not found');
+        return;
+    }
+
+    $this->db->query('DELETE FROM listings WHERE id = :id', $params);
+
+    $_SESSION['success_message'] = 'Listing deleted successfully';
+
+    redirect('/listings');
+}
   
-}
 }

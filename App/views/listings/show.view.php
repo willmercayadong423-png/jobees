@@ -7,16 +7,23 @@
 <section class="container mx-auto p-4 mt-4">
       <div class="rounded-lg shadow-md bg-white p-3">
        <div class="flex justify-between items-center">
-      <a class="block p-4 text-blue-700" href="/WS03/public/listings">
+      <a class="block p-4 text-blue-700" href="/listings">
         <i class="fa fa-arrow-alt-circle-left"></i>
         Back To Listings
       </a>
       <div class="flex space-x-4 ml-4">
         <a href="/edit" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded">Edit</a>
         <!-- Delete Form -->
-        <form method="POST">
-          <button type="submit" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded">Delete</button>
-        </form>
+       <form method="POST" action="/listings/<?= $listing->id ?>">
+    <input type="hidden" name="_method" value="DELETE">
+
+    <button
+        type="submit"
+        class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
+    >
+        Delete
+    </button>
+</form>
         <!-- End Delete Form -->
       </div>
     </div>
@@ -27,7 +34,10 @@
           </p>
           <ul class="my-4 bg-gray-100 p-4">
             <li class="mb-2">
-              <strong>Salary:</strong>  $<?= number_format($listing->salary); ?>
+              <strong>Salary:</strong>  
+          <?= !empty($listing->salary)
+    ? '$' . number_format((float)$listing->salary)
+    : 'N/A' ?>
             </li>
             <li class="mb-2">
               <strong>Location:</strong> <?= $listing->city; ?>
@@ -37,8 +47,9 @@
               >
             </li>
             <li class="mb-2">
-              <strong>Tags:</strong> <?= $listing->tags; ?>
-             
+              <?php if(!empty($listing->tags)) : ?>
+                <strong>Tags:</strong> <?= $listing->tags; ?>
+              <?php endif; ?>
             </li>
           </ul>
         </div>

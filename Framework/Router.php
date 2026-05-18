@@ -1,7 +1,7 @@
 <?php
 namespace Framework;
 
-use App\controllers\ErrorController;
+use App\Controllers\ErrorController;
 
 class Router
 {
@@ -31,10 +31,10 @@ class Router
         $this->RegisterRoute('PUT', $uri, $controller);
     }
 
-    public function delete($uri, $controller)
-    {
-        $this->RegisterRoute('DELETE', $uri, $controller);
-    }
+  public function deleteRoute($uri, $controller)
+{
+    $this->RegisterRoute('DELETE', $uri, $controller);
+}
 
     public function error($httpCode = 404)
     {
@@ -65,41 +65,56 @@ public function show()
 }
 
 
-
- public function route($uri, $method)
+public function route($uri, $method)
 {
-    foreach ($this->routes as $route) {
+    $requestMethod = $_SERVER['REQUEST_METHOD'];
 
-        $pattern = preg_replace('/\{[^}]+\}/', '([^/]+)', $route['uri']);
-        $pattern = '@^' . $pattern . '$@';
-
-        if (
-            preg_match($pattern, $uri, $matches)
-            && $route['method'] === strtoupper($method)
-        ) {
-
-            array_shift($matches);
-
-            $_GET['params'] = $matches;
-
-            $action = $route['action'];
-
-            // MVC controller support
-            if (is_array($action)) {
-
-                [$class, $method] = $action;
-
-                $controller = new $class();
-
-                return $controller->$method();
-            }
-
-            // Old file-based support
-            require basePath('App/' . $action);
-
-            return;
-        }
+    if ($requestMethod === 'POST' && isset($_POST['_method'])) {
+        $requestMethod = strtoupper($_POST['_method']);
     }
+
+    // ✅ PLACE IT HERE (BEFORE LOOP)
+    $currentUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+    $basePath = '/WS03/public';
+
+    if (str_starts_with($currentUri, $basePath)) {
+        $currentUri = substr($currentUri, strlen($basePath));
+    }
+
+    $currentUri = '/' . trim($currentUri, '/');
+
+    if ($currentUri === '') {
+        $currentUri = '/';
+    }
+
+ 
+
+   foreach ($this->routes as $route) {
+
+    $pattern = preg_replace('/\{[^}]+\}/', '([^\/]+)', $route['uri']);
+    $pattern = "#^" . $pattern . "$#";
+
+    if (
+        preg_match($pattern, $currentUri, $matches) &&
+        $route['method'] === $requestMethod
+    ) {
+        array_shift($matches);
+
+        $_GET['params'] = $matches;
+
+        $action = $route['action'];
+
+        if (is_array($action)) {
+            [$class, $controllerMethod] = $action;
+            $controller = new $class();
+            return $controller->$controllerMethod($_GET['params']);
+        }
+
+        require basePath('App/' . $action);
+        return;
+    }
+}
 
     ErrorController::notFound();
 }

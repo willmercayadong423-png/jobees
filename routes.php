@@ -11,4 +11,6 @@ $router->get('/listings/create', [ListingController::class, 'create']);
 
 $router->get('/listings/{id}', [ListingController::class, 'show']);
 
-$router->post('/listings', [ListingController::class, 'store']); 
+$router->post('/listings', [ListingController::class, 'store']);
+
+$router->deleteRoute('/listings/{id}', [ListingController::class, 'destroy']);

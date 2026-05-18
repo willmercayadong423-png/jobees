@@ -1,4 +1,9 @@
+
+
+
 <?php
+session_start();
+
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -19,13 +24,13 @@ require basePath('routes.php');
 
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-$basePath = '/WS03/public';
+$scriptName = dirname($_SERVER['SCRIPT_NAME']);
 
-if (str_starts_with($uri, $basePath)) {
-    $uri = substr($uri, strlen($basePath));
+if ($scriptName !== '/' && str_starts_with($uri, $scriptName)) {
+    $uri = substr($uri, strlen($scriptName));
 }
 
-$uri = $uri ?: '/';
+$uri = '/' . trim($uri, '/');
 
 $method = $_SERVER['REQUEST_METHOD'];
 

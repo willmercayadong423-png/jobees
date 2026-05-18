@@ -25,19 +25,19 @@ class Database
                 $options // ✅ apply options
             );
         } catch (PDOException $e) {
-            throw new Exception("Database connection failed: " . $e->getMessage());
+           throw new \Exception("Database connection failed: " . $e->getMessage());
         }
     }
 
     // ✅ Add your query method here (you were missing it in this class)
     public function query($query, $params = [])
-    {
-        try {
-            $stmt = $this->conn->prepare($query);
-            $stmt->execute($params);
-            return $stmt;
-        } catch (PDOException $e) {
-            throw new Exception("Query failed: " . $e->getMessage());
-        }
+{
+    try {
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($params);
+        return $stmt;
+    } catch (PDOException $e) {
+        throw new \Exception("Query failed: " . $e->getMessage());
     }
+}
 }
