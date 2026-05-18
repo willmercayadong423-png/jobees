@@ -20,9 +20,11 @@ public static function email($value) {
 
 }
 
-public static function match($value1, $value2) {
+public static function match($value1, 
+$value2) {
     $value1 = trim($value1);
     $value2 = trim($value2);
+    
     return $value1 === $value2;
 }
 

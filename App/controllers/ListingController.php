@@ -35,9 +35,13 @@ class ListingController
         loadView('listings/create');
     }
 
-    public function show()
+   public function show($params)
 {
-    $id = $_GET['params'][0] ?? null;
+    $id = $params[0] ?? null;
+
+    if (!$id) {
+        die('Invalid ID');
+    }
 
     $listing = $this->db
         ->query(
@@ -54,10 +58,9 @@ class ListingController
         'listing' => $listing
     ]);
 }
-
 public function store(){
    $allowedFields = ['title', 'description', 'salary', 'tags', 'company', 'address', 'city', 'state', 'phone', 'email', 'requirements', 'benefits'];
-    
+
     
     $newListingData = array_intersect_key($_POST, array_flip($allowedFields));
     
@@ -84,45 +87,22 @@ if (!empty($errors)) {
     ]);
 } else {
 
+$fields = array_keys($newListingData);
 
- $fields = [];
- foreach ($newListingData as $field => $value) {
-    $fields[] = $field;
- }
-//    $this->db->query('INSERT INTO listings 
-//         (title, description, salary, tags,
-//          company, address, city, state, phone,
-//          email, requirements, benefits, user_id) 
-//          VALUES (:title, :description, :salary,
-//          :tags, :company, :address, :city,
-//          :state, :phone, :email, :requirements,
-//          :benefits, :user_id)', $newListingData);
+$values = array_map(fn($field) => ':' . $field, $fields);
 
+$fields = implode(', ', $fields);
 
-
-
-
- $fields = implode(', ', $fields);
- 
- $value = [];
-    foreach ($newListingData as $field => $value) {
-        if ($value === '') {
-        $newListingData[$field] = null;
-        }
-        $values[] = ':' . $field;
-    }
-    $values = implode(', ', $values);
+$values = implode(', ', $values);
 
 $query = "INSERT INTO listings ($fields) VALUES ($values)";
 
 $this->db->query($query, $newListingData);
 
+$id = $this->db->conn->lastInsertId();
 
-
-
-redirect('/listings');
-
-
+redirect('/listings/' . $id);
+exit;
 
 
 
@@ -160,5 +140,79 @@ public function destroy($params)
 
     redirect('/listings');
 }
+
+
+
+public function edit()
+{
   
+
+    $id = (int) ($_GET['params'][0] ?? 0);
+
+    if ($id <= 0) {
+        die('Invalid ID');
+    }
+
+    $listing = $this->db
+        ->query(
+            'SELECT * FROM listings WHERE id = :id',
+            ['id' => $id]
+        )
+        ->fetch(PDO::FETCH_OBJ);
+
+    if (!$listing) {
+        die('Listing not found');
+    }
+
+    loadView('listings/edit', [
+        'listing' => $listing
+    ]);
+}
+
+public function update($params)
+{
+    $id = $params[0] ?? null;
+
+    if (!$id) {
+        die('Invalid ID');
+    }
+
+    $listing = $this->db
+        ->query(
+            'SELECT * FROM listings WHERE id = :id',
+            ['id' => $id]
+        )
+        ->fetch(PDO::FETCH_OBJ);
+
+    if (!$listing) {
+        die('Listing not found');
+    }
+
+    $allowedFields = [
+        'title', 'description', 'salary', 'tags', 'company',
+        'address', 'city', 'state', 'phone', 'email',
+        'requirements', 'benefits'
+    ];
+
+    $updatedValues = array_intersect_key($_POST, array_flip($allowedFields));
+    $updatedValues = array_map('sanitize', $updatedValues);
+
+    $setString = implode(', ', array_map(
+        fn($field) => "$field = :$field",
+        array_keys($updatedValues)
+    ));
+
+    $updatedValues['id'] = $id;
+
+    $query = "UPDATE listings SET $setString WHERE id = :id";
+
+    $this->db->query($query, $updatedValues);
+
+    redirect("/listings/$id");
+    exit;
+inspectAndDie('Success');
+
+inspectAndDie('$errors');
+}
+
 }
