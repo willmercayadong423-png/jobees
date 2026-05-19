@@ -1,22 +1,37 @@
 
 
 <?php
-session_start();
+// session_start();
 
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 require __DIR__ . '/../vendor/autoload.php';
+
+use Framework\Router;
+use Framework\Session;
+
+Session::start();
+
+
+
 require '../helpers.php';
+
+
+
 require basePath('Framework/Database.php');
 use Framework\Database;
+
+
+
+
 $config = require basePath('config/db.php');
 
 $db = new Database($config);
 
 require basePath('Framework/Router.php');
-use Framework\Router;
+
 $router = new Router();
 
 require basePath('routes.php');

@@ -21,5 +21,5 @@ $router->get('/auth/login', [UserController::class, 'login']);
 
 
 $router->post('/auth/register', [UserController::class, 'store']);
-$router->post('/auth/login', [UserController::class, 'authenticate']);
 $router->post('/auth/logout', [UserController::class, 'logout']);
+ // $router->post('/auth/login', [UserController::class, 'authenticate']);
