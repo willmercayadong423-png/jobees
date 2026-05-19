@@ -1,4 +1,5 @@
 <?php
+
 namespace Framework;
 
 use App\Controllers\ErrorController;
@@ -7,115 +8,111 @@ class Router
 {
     protected $routes = [];
 
-    public function RegisterRoute($method, $uri, $action)
-{
-    $this->routes[] = [
-        'method' => $method,
-        'uri' => $uri,
-        'action' => $action
-    ];
-}
-
-    public function get($uri, $controller)
+    public function registerRoute($method, $uri, $action, $middleware = [])
     {
-        $this->RegisterRoute('GET', $uri, $controller);
+        $this->routes[] = [
+            'method' => $method,
+            'uri' => $uri,
+            'action' => $action,
+            'middleware' => $middleware
+        ];
     }
 
-    public function post($uri, $controller)
+    public function get($uri, $controller, $middleware = [])
     {
-        $this->RegisterRoute('POST', $uri, $controller);
+        $this->registerRoute('GET', $uri, $controller, $middleware);
     }
 
-    public function put($uri, $controller)
+    public function post($uri, $controller, $middleware = [])
     {
-        $this->RegisterRoute('PUT', $uri, $controller);
+        $this->registerRoute('POST', $uri, $controller, $middleware);
     }
 
-  public function deleteRoute($uri, $controller)
-{
-    $this->RegisterRoute('DELETE', $uri, $controller);
-}
+    public function put($uri, $controller, $middleware = [])
+    {
+        $this->registerRoute('PUT', $uri, $controller, $middleware);
+    }
+
+    public function delete($uri, $controller, $middleware = [])
+    {
+        $this->registerRoute('DELETE', $uri, $controller, $middleware);
+    }
 
     public function error($httpCode = 404)
     {
         http_response_code($httpCode);
+
         loadView("error/{$httpCode}");
+
         exit;
     }
 
+    public function route($uri, $method)
+    {
+        $requestMethod = $_SERVER['REQUEST_METHOD'];
 
-public function show()
-{
-    $id = $_GET['params'][0] ?? null;
-
-    $listing = $this->db
-        ->query(
-            'SELECT * FROM listings WHERE id = :id',
-            ['id' => $id]
-        )
-        ->fetch(PDO::FETCH_OBJ);
-
-    if (!$listing) {
-        die('Listing not found');
-    }
-
-    loadView('listings/show', [
-        'listing' => $listing
-    ]);
-}
-
-
-public function route($uri, $method)
-{
-    $requestMethod = $_SERVER['REQUEST_METHOD'];
-
-    if ($requestMethod === 'POST' && isset($_POST['_method'])) {
-        $requestMethod = strtoupper($_POST['_method']);
-    }
-
-    // ✅ PLACE IT HERE (BEFORE LOOP)
-    $currentUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
-    $basePath = '/WS03/public';
-
-    if (str_starts_with($currentUri, $basePath)) {
-        $currentUri = substr($currentUri, strlen($basePath));
-    }
-
-    $currentUri = '/' . trim($currentUri, '/');
-
-    if ($currentUri === '') {
-        $currentUri = '/';
-    }
-
- 
-
-   foreach ($this->routes as $route) {
-
-    $pattern = preg_replace('/\{[^}]+\}/', '([^\/]+)', $route['uri']);
-    $pattern = "#^" . $pattern . "$#";
-
-    if (
-        preg_match($pattern, $currentUri, $matches) &&
-        $route['method'] === $requestMethod
-    ) {
-        array_shift($matches);
-
-        $_GET['params'] = $matches;
-
-        $action = $route['action'];
-
-        if (is_array($action)) {
-            [$class, $controllerMethod] = $action;
-            $controller = new $class();
-            return $controller->$controllerMethod($_GET['params']);
+        // Method spoofing
+        if ($requestMethod === 'POST' && isset($_POST['_method'])) {
+            $requestMethod = strtoupper($_POST['_method']);
         }
 
-        require basePath('App/' . $action);
-        return;
-    }
-}
+        // Current URI
+        $currentUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-    ErrorController::notFound();
+        $basePath = '/WS03/public';
+
+        if (str_starts_with($currentUri, $basePath)) {
+            $currentUri = substr($currentUri, strlen($basePath));
+        }
+
+        $currentUri = '/' . trim($currentUri, '/');
+
+        if ($currentUri === '/') {
+            $currentUri = '/';
+        }
+
+        foreach ($this->routes as $route) {
+
+            $pattern = preg_replace('/\{[^}]+\}/', '([^\/]+)', $route['uri']);
+
+            $pattern = "#^" . $pattern . "$#";
+
+            if (
+                preg_match($pattern, $currentUri, $matches) &&
+                $route['method'] === $requestMethod
+            ) {
+
+                array_shift($matches);
+
+                $_GET['params'] = $matches;
+
+                // Middleware
+                foreach ($route['middleware'] as $middleware) {
+
+    $middlewareClass = "Framework\\Middleware\\Authorize";
+
+    $middlewareInstance = new $middlewareClass();
+
+    $middlewareInstance->handle($middleware);
 }
+                $action = $route['action'];
+
+                // Controller
+                if (is_array($action)) {
+
+                    [$class, $controllerMethod] = $action;
+
+                    $controller = new $class();
+
+                    return $controller->$controllerMethod($matches);
+                }
+
+                require basePath('App/' . $action);
+
+                return;
+            }
+        }
+
+        ErrorController::notFound();
+    }
 }

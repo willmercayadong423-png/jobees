@@ -101,7 +101,7 @@ $this->db->query($query, $newListingData);
 
 $id = $this->db->conn->lastInsertId();
 
-redirect('/listings/' . $id);
+redirect('/listings');
 exit;
 
 
@@ -215,7 +215,7 @@ if ($stmt->rowCount() > 0) {
     $_SESSION['error_message'] = 'No changes were made';
 }
 
-redirect('/listings/' . $id);
+redirect('/listings');
 exit;
 
 
