@@ -203,16 +203,22 @@ public function update($params)
     ));
 
     $updatedValues['id'] = $id;
+    
 
     $query = "UPDATE listings SET $setString WHERE id = :id";
 
-    $this->db->query($query, $updatedValues);
+$stmt = $this->db->query($query, $updatedValues);
 
-    redirect("/listings/$id");
-    exit;
-inspectAndDie('Success');
-
-inspectAndDie('$errors');
+if ($stmt->rowCount() > 0) {
+    $_SESSION['success_message'] = 'Listing updated successfully';
+} else {
+    $_SESSION['error_message'] = 'No changes were made';
 }
 
+redirect('/listings/' . $id);
+exit;
+
+
+
+}
 }

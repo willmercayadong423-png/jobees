@@ -1,2 +1,0 @@
-<?php
-loadView('auth/register');
