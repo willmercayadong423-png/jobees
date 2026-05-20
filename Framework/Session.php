@@ -16,9 +16,9 @@ class Session
         $_SESSION[$key] = $value;
     }
 
-    public static function get($key)
+    public static function get($key, $default = null)
     {
-        return $_SESSION[$key] ?? null;
+        return $_SESSION[$key] ?? $default;
     }
 
     public static function has($key)
@@ -33,6 +33,25 @@ class Session
 
     public static function destroy()
     {
-        session_destroy();
+        $_SESSION = [];
+
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_destroy();
+        }
+    }
+
+
+    public static function setFlashMessage($key, $message)
+    {
+        self::set('flash_' . $key, $message);
+    }
+
+    public static function getFlashMessage($key, $default = null)
+    {
+        $message = self::get('flash_' . $key, $default);
+
+        self::remove('flash_' . $key);
+
+        return $message;
     }
 }

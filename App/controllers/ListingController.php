@@ -4,6 +4,8 @@ namespace App\Controllers;
 use App\Controllers\ErrorController;
 use Framework\Database;
 use Framework\Validation;
+use Framework\Session;
+use Framework\Authorization;
 use PDO;
 
 class ListingController
@@ -22,7 +24,7 @@ class ListingController
    
 
         $listings = $this->db
-            ->query('SELECT * FROM listings')
+            ->query('SELECT * FROM listings ORDER BY created_at DESC')
             ->fetchAll(PDO::FETCH_OBJ);
 
        loadView('listings/index', [
@@ -64,7 +66,7 @@ public function store(){
     
     $newListingData = array_intersect_key($_POST, array_flip($allowedFields));
     
-    $newListingData['user_id'] = 1; // Assuming user ID is 1 for now, replace with actual user ID in production
+    $newListingData['user_id'] = $_SESSION['user']['id'];
     
     $newListingData = array_map('sanitize', 
     $newListingData);
@@ -96,6 +98,9 @@ $fields = implode(', ', $fields);
 $values = implode(', ', $values);
 
 $query = "INSERT INTO listings ($fields) VALUES ($values)";
+  Session::setFlashMessage('success_message', 'Listing created successfully');
+   
+
 
 $this->db->query($query, $newListingData);
 
@@ -129,15 +134,33 @@ public function destroy($params)
         ->query('SELECT * FROM listings WHERE id = :id', $params)
         ->fetch(PDO::FETCH_OBJ);
 
+
+//check if listing exists before deleting
+
     if (!$listing) {
         ErrorController::notFound('Listing not found');
         return;
     }
 
+//authorization
+
+if(!Authorization::isOwner($listing->user_id)) {
+   
+    Session::setFlashMessage('error_message', 'You are not authorized to delete this listing');
+    return redirect('/listings/' . $listing->id);
+}
+
+
+
+
+
+
+
     $this->db->query('DELETE FROM listings WHERE id = :id', $params);
 
-    $_SESSION['success_message'] = 'Listing deleted successfully';
 
+  Session::setFlashMessage('success_message', 'Listing deleted successfully');
+   
     redirect('/listings');
 }
 
@@ -210,9 +233,9 @@ public function update($params)
 $stmt = $this->db->query($query, $updatedValues);
 
 if ($stmt->rowCount() > 0) {
-    $_SESSION['success_message'] = 'Listing updated successfully';
+    Session::setFlashMessage('success_message', 'Listing updated successfully');
 } else {
-    $_SESSION['error_message'] = 'No changes were made';
+    Session::setFlashMessage('error_message', 'No changes were made');
 }
 
 redirect('/listings');
